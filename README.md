@@ -14,11 +14,13 @@ You can run the scripts directly from GitHub without cloning the repository:
 
 ### Download and Verify Script
 
-Run the download and verify script directly from GitHub (downloads uploads.txt, runs script, then cleans up):
+Run the download and verify script directly from GitHub (downloads uploads.txt and runs script):
 
 ```bash
-curl -s https://raw.githubusercontent.com/safenetforum-community/upload-download-and-verify/refs/heads/main/uploads.txt -o uploads.txt && bash <(curl -s https://raw.githubusercontent.com/safenetforum-community/upload-download-and-verify/refs/heads/main/download_and_verify.sh) && rm -f uploads.txt
+curl -s https://raw.githubusercontent.com/safenetforum-community/upload-download-and-verify/refs/heads/main/uploads.txt -o uploads.txt && bash <(curl -s https://raw.githubusercontent.com/safenetforum-community/upload-download-and-verify/refs/heads/main/download_and_verify.sh)
 ```
+
+**Note:** This command will overwrite any existing `uploads.txt` file in the current directory without warning.
 
 ## Installation
 
