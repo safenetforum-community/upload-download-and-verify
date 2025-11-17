@@ -50,11 +50,26 @@ upload --help  # or check usage
 
 ## Configuration
 
-Before using `upload.sh`, edit the script and set your wallet address:
+Before using `upload.sh`, set your Ethereum wallet address and private key in your `~/.bashrc` file:
+
+1. Open `~/.bashrc` in nano:
+```bash
+nano ~/.bashrc
+```
+
+2. Add the following lines:
+```bash
+export WALLET_ADDRESS="0x123..."
+export SECRET_KEY="<Wallet Private Key Here>"
+```
+
+After adding these lines, reload your shell configuration:
 
 ```bash
-WALLET_ADDRESS="0x123..."
+source ~/.bashrc
 ```
+
+Alternatively, you can edit the script directly and set `WALLET_ADDRESS` on line 10 (the script will use the environment variable if set, otherwise fall back to the value in the script).
 
 ## Usage
 
