@@ -226,7 +226,7 @@ print_summary() {
     local completed_count=${#result_filenames[@]}
     # Use absolute path for log file to prevent accidentally overwriting the script
     local script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    local log_file="${script_dir}/download_and_verify.txt"
+    local log_file="${script_dir}/log_download_and_verify.txt"
     
     # Safety check: ensure we're not writing to the script itself
     local script_path="${script_dir}/$(basename "${BASH_SOURCE[0]}")"
