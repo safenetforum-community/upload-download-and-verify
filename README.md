@@ -39,7 +39,7 @@ upload --help  # or check usage
 Before using `upload.sh`, edit the script and set your wallet address:
 
 ```bash
-WALLET_ADDRESS="0x1c5cAAEFC87Dd2b397DDe49f9e8134765B900122"
+WALLET_ADDRESS="0x01234567891011121314"
 ```
 
 ## Usage
