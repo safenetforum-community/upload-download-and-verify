@@ -244,6 +244,10 @@ print_summary() {
         printf "$@" | tee -a "$log_file"
     }
     
+    # Add blank lines to log file for readability
+    echo "" >> "$log_file"
+    echo "" >> "$log_file"
+    
     if [ $is_interrupted -eq 1 ]; then
         echo ""
         echo -e "${RED}⚠ Script interrupted by user (Ctrl+C)${RESET}" | tee -a "$log_file"
