@@ -1,1 +1,2 @@
 ant file download --retries 20 c61ee67baea77eb6be57c199679c7760ac27f60d5c97f80c03baf798bb57386d seed.txt  # 00h 00m 46s md5sum 8ed782db8873eb534a25602038ce93ce  4.0K $0.01 17/11/25
+ant file download --retries 20 02aa9205b26ba819090650a230cb180bd21e628daa2327b2b4ff086402c4d25c lmde-6-cinnamon-64bit.iso  # 00h 09m 34s md5sum 34c4a18045220b0de26edb0d8e4d67ef  2.6G $1.21 17/11/25
