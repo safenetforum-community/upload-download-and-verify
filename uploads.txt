@@ -1,3 +1,4 @@
 ant file download --retries 20 c61ee67baea77eb6be57c199679c7760ac27f60d5c97f80c03baf798bb57386d seed.txt  # 00h 00m 46s md5sum 8ed782db8873eb534a25602038ce93ce  4.0K $0.01 17/11/25
 ant file download --retries 20 02aa9205b26ba819090650a230cb180bd21e628daa2327b2b4ff086402c4d25c lmde-6-cinnamon-64bit.iso  # 00h 09m 34s md5sum 34c4a18045220b0de26edb0d8e4d67ef  2.6G $1.21 17/11/25
 ant file download --retries 20 6b1f3be9db3ca278a4c0d83f1ce050a74c16ed90c6c8ca1a56ef60867f4da0ae lmde-7-cinnamon-64bit.iso  # 00h 18m 17s md5sum 0fc9f0b97622a5826d19fb8ca4a24a37  2.8G $1.31 17/11/25
+ant file download --retries 20 2bc0e24a0ffcb628d04400c9265227fc6448fb1216f8cb7db60511c28161b4fd linuxmint-21-xfce-64bit.iso  # 00h 17m 09s md5sum 7f213f0a15cc92e3c12d322df002541e  2.3G $4.92 18/11/25
