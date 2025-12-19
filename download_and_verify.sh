@@ -325,6 +325,19 @@ print_summary() {
     output_both "  Files processed: $completed_count"
     output_both "  Download failures: $download_failed"
     output_both "  Verification failures: $verify_failed"
+    
+    # Calculate cumulative size of all successfully downloaded files
+    local total_size_bytes=0
+    for i in "${!result_file_size[@]}"; do
+        local file_size="${result_file_size[$i]}"
+        if [ "$file_size" != "N/A" ] && [ "$file_size" != "Failed Download" ]; then
+            total_size_bytes=$((total_size_bytes + file_size))
+        fi
+    done
+    
+    # Format and display total size
+    local total_size_formatted=$(format_size "$total_size_bytes")
+    output_both "  Total amount downloaded: $total_size_formatted"
     echo ""
 }
 
