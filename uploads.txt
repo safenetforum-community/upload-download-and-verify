@@ -1,6 +1,9 @@
-ant file download --retries 20 c61ee67baea77eb6be57c199679c7760ac27f60d5c97f80c03baf798bb57386d seed.txt  # 00h 00m 46s md5sum 8ed782db8873eb534a25602038ce93ce  4.0K $0.01 17/11/25
-ant file download --retries 20 02aa9205b26ba819090650a230cb180bd21e628daa2327b2b4ff086402c4d25c lmde-6-cinnamon-64bit.iso  # 00h 09m 34s md5sum 34c4a18045220b0de26edb0d8e4d67ef  2.6G $1.21 17/11/25
-ant file download --retries 20 6b1f3be9db3ca278a4c0d83f1ce050a74c16ed90c6c8ca1a56ef60867f4da0ae lmde-7-cinnamon-64bit.iso  # 00h 18m 17s md5sum 0fc9f0b97622a5826d19fb8ca4a24a37  2.8G $1.31 17/11/25
-ant file download --retries 20 2bc0e24a0ffcb628d04400c9265227fc6448fb1216f8cb7db60511c28161b4fd linuxmint-21-xfce-64bit.iso  # 00h 17m 09s md5sum 7f213f0a15cc92e3c12d322df002541e  2.3G $4.92 18/11/25
-ant file download --retries 20 e568bd17960d4a3cb763203b36a874fdce674fa2827dda6bac3546508deb49c0 linuxmint-21-mate-64bit.iso  # 00h 24m 35s md5sum 1ec149e7d906d32fb849f90134bde2d6  2.4G $1.09 18/11/25
-ant file download --retries 20 cf26a65c907a075701adbe6eb7cef00e4664857768b2aea8f92e71774643e8bd linuxmint-21-cinnamon-64bit.iso  # 00h 20m 34s md5sum dcdbee2c135ccc485aa28854056ef787  2.3G $1.04 18/11/25
+ant file download --retries 20 814f301f2391f5ddebbe388ea451730eb82ba2c17fed3b9282faefe13218f83b seed.txt  # 00h 00m 46s md5sum ef21dd091dad17d2124a6e21b2a8e5ee  4.0K $0.01 18/12/25
+ant file download --retries 20 02aa9205b26ba819090650a230cb180bd21e628daa2327b2b4ff086402c4d25c lmde-6-cinnamon-64bit.iso  # 00h 09m 34s md5sum 34c4a18045220b0de26edb0d8e4d67ef  2.6G $1.21 18/12/25
+ant file download --retries 20 6b1f3be9db3ca278a4c0d83f1ce050a74c16ed90c6c8ca1a56ef60867f4da0ae lmde-7-cinnamon-64bit.iso  # 00h 18m 17s md5sum 0fc9f0b97622a5826d19fb8ca4a24a37  2.8G $1.31 18/12/25
+ant file download --retries 20 2bc0e24a0ffcb628d04400c9265227fc6448fb1216f8cb7db60511c28161b4fd linuxmint-21-xfce-64bit.iso  # 00h 17m 09s md5sum 7f213f0a15cc92e3c12d322df002541e  2.3G $4.92 18/12/25
+ant file download --retries 20 e568bd17960d4a3cb763203b36a874fdce674fa2827dda6bac3546508deb49c0 linuxmint-21-mate-64bit.iso  # 00h 24m 35s md5sum 1ec149e7d906d32fb849f90134bde2d6  2.4G $1.09 18/12/25
+ant file download --retries 20 cf26a65c907a075701adbe6eb7cef00e4664857768b2aea8f92e71774643e8bd linuxmint-21-cinnamon-64bit.iso  # 00h 20m 34s md5sum dcdbee2c135ccc485aa28854056ef787  2.3G $1.04 18/12/25
+ant file download --retries 20 999611ba05b1fc07f49f37cb14a14f9b148168f802aaf85fc5f242d50e86ef67 linuxmint-21.1-xfce-64bit.iso  # 00h 12m 46s md5sum b39031bd04edeb7641bb07aec73dc49d  2.5G $1.08 19/12/25
+ant file download --retries 20 c4be83653596ef66f154365689a47c3e6669434e00922b82ff0308aa91666eda linuxmint-21.1-mate-64bit.iso  # 00h 23m 50s md5sum bbc533c66edb7dcbde7525f71f7f5ec8  2.6G $1.18 19/12/25
+ant file download --retries 20 5f3f397c40bd37c8ef02ae4483abdf53ac0476f00d4600c9524e12757d192a3a linuxmint-21.1-cinnamon-64bit.iso  # 00h 19m 41s md5sum ce0a8c526a0cc8343fba08b6fff61bc8  2.5G $1.16 19/12/25
