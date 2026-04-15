@@ -146,8 +146,7 @@ echo ""
 TEMP_OUTPUT=$(mktemp)
 
 # Run the upload command and capture output while showing it in real-time
-# Use a different approach to ensure proper capture
-ant --network-id 1 file upload -p --no-archive --retry-failed 0 "$FILENAME" 2>&1 | tee "$TEMP_OUTPUT"
+ant file upload --public "$FILENAME" 2>&1 | tee "$TEMP_OUTPUT"
 UPLOAD_EXIT_CODE=${PIPESTATUS[0]}
 
 # Read the output
@@ -169,7 +168,7 @@ echo "💰 Checking ETH balance after upload..."
 ETH_BALANCE_AFTER=$(get_eth_balance "$WALLET_ADDRESS")
 echo "  ETH Balance After: $ETH_BALANCE_AFTER ETH"
 
-# Calculate ETH gas cost
+# Calculate ETH gas cost from balance difference
 ETH_GAS_COST=$(echo "scale=18; $ETH_BALANCE_BEFORE - $ETH_BALANCE_AFTER" | bc -l 2>/dev/null || echo "0")
 echo "  ETH Gas Cost: $ETH_GAS_COST ETH"
 
@@ -189,13 +188,8 @@ echo ""
 echo "📊 Upload Analysis:"
 echo "=================="
 
-# Extract file address from output - try multiple patterns
-FILE_ADDRESS=$(echo "$UPLOAD_OUTPUT" | grep "At address:" | sed 's/.*At address: \([a-f0-9]\+\).*/\1/')
-
-# If that didn't work, try the other pattern
-if [[ -z "$FILE_ADDRESS" ]]; then
-    FILE_ADDRESS=$(echo "$UPLOAD_OUTPUT" | grep "Upload completed for file" | sed 's/.*at \([a-f0-9]\+\).*/\1/')
-fi
+# Extract file address from new output format: "  Address: <hex>"
+FILE_ADDRESS=$(echo "$UPLOAD_OUTPUT" | grep -oP '^\s*Address:\s*\K[a-f0-9]+')
 
 if [[ -z "$FILE_ADDRESS" ]]; then
     echo "❌ Error: Could not extract file address from upload output"
@@ -204,41 +198,25 @@ if [[ -z "$FILE_ADDRESS" ]]; then
     exit 1
 fi
 
-# Extract number of chunks
-CHUNKS=$(echo "$UPLOAD_OUTPUT" | grep "Processing estimated total" | sed 's/.*total \([0-9]\+\) chunks.*/\1/' || echo "")
+# Extract number of chunks: "  Chunks:  27"
+CHUNKS=$(echo "$UPLOAD_OUTPUT" | grep -oP '^\s*Chunks:\s*\K[0-9]+' || echo "")
 
-# Check if chunks were free (already existed)
-FREE_CHUNKS=$(echo "$UPLOAD_OUTPUT" | grep "chunks were free" | sed 's/\([0-9]\+\) chunks were free.*/\1/' || echo "")
+# Extract ANT cost and gas cost from: "  Cost:    0.3164 ANT (gas: 0.000020 ETH)"
+TOTAL_COST_ANT=$(echo "$UPLOAD_OUTPUT" | grep -oP '^\s*Cost:\s*\K[0-9.]+(?=\s*ANT)' || echo "0")
+GAS_COST_ETH_REPORTED=$(echo "$UPLOAD_OUTPUT" | grep -oP 'gas:\s*\K[0-9.]+(?=\s*ETH)' || echo "")
 
-# Extract total cost in AttoTokens
-TOTAL_COST_ATTO=$(echo "$UPLOAD_OUTPUT" | grep "Total cost:" | sed 's/.*Total cost: \([0-9]\+\).*/\1/' || echo "")
-
-# If no cost found, it means chunks were free
-if [[ -z "$TOTAL_COST_ATTO" ]]; then
-    TOTAL_COST_ATTO="0"
-fi
-
-# Convert AttoTokens to ANT (1 ANT = 10^18 AttoTokens)
-if [[ -n "$TOTAL_COST_ATTO" && "$TOTAL_COST_ATTO" != "0" ]]; then
-    TOTAL_COST_ANT=$(echo "scale=18; $TOTAL_COST_ATTO / 1000000000000000000" | bc 2>/dev/null)
-    if [[ $? -ne 0 ]]; then
-        TOTAL_COST_ANT="0"
-    fi
+# Use reported gas cost if available, otherwise use balance-based calculation
+if [[ -n "$GAS_COST_ETH_REPORTED" ]]; then
+    GAS_COST_ETH="$GAS_COST_ETH_REPORTED"
 else
-    TOTAL_COST_ANT="0"
+    GAS_COST_ETH="$ETH_GAS_COST"
 fi
 
-# Extract upload duration from ant output
-UPLOAD_DURATION_ANT=$(echo "$UPLOAD_OUTPUT" | grep "Upload completed in" | sed 's/.*in \([0-9\.]\+\)s.*/\1/' || echo "")
+# Extract upload time from ant output: "  Time:    301.0s"
+UPLOAD_TIME_ANT=$(echo "$UPLOAD_OUTPUT" | grep -oP '^\s*Time:\s*\K[0-9.]+(?=s)' || echo "")
 
-# Extract time information from time command (it will be shown in the output)
-# We'll use our calculated duration instead
-REAL_TIME="${UPLOAD_DURATION}s"
-USER_TIME="N/A"
-SYS_TIME="N/A"
-
-# Use actual ETH gas cost from balance difference
-GAS_COST_ETH="$ETH_GAS_COST"
+# Extract reported size: "  Size:    93.3 MB"
+UPLOAD_SIZE_REPORTED=$(echo "$UPLOAD_OUTPUT" | grep -oP '^\s*Size:\s*\K[0-9.]+ [A-Z]+' || echo "")
 
 # Get current ETH price in USD
 echo "💰 Fetching current ETH price..."
@@ -250,13 +228,9 @@ echo "💰 Fetching current ANT token price..."
 ANT_PRICE_USD=$(get_ant_price)
 echo "  ANT Price: \$$ANT_PRICE_USD"
 
-# Calculate USD cost using real ETH price
+# Calculate USD costs
 GAS_COST_USD=$(echo "scale=2; $GAS_COST_ETH * $ETH_PRICE_USD" | bc -l 2>/dev/null || echo "0.00")
-
-# Calculate ANT cost in USD
 ANT_COST_USD=$(echo "scale=2; $TOTAL_COST_ANT * $ANT_PRICE_USD" | bc -l 2>/dev/null || echo "0.00")
-
-# Calculate total USD cost (ANT cost + gas cost)
 TOTAL_COST_USD=$(echo "scale=2; $ANT_COST_USD + $GAS_COST_USD" | bc -l 2>/dev/null || echo "0.00")
 
 # Display results
@@ -267,14 +241,10 @@ echo "  File: $FILENAME"
 echo "  Size: $FILE_SIZE"
 echo "  Address: $FILE_ADDRESS"
 echo "  Chunks: $CHUNKS"
-if [[ -n "$FREE_CHUNKS" ]]; then
-    echo "  Free Chunks: $FREE_CHUNKS (already existed on network)"
-fi
 echo "  MD5: $MD5_ORIGINAL"
 echo ""
 echo "💰 Cost Analysis:"
 echo "  ANT Cost: $TOTAL_COST_ANT ANT (\$$ANT_COST_USD)"
-echo "  AttoTokens: $TOTAL_COST_ATTO"
 echo "  Gas Cost: $GAS_COST_ETH ETH (\$$GAS_COST_USD)"
 echo "  Total USD Cost: \$$TOTAL_COST_USD"
 echo ""
@@ -285,7 +255,7 @@ echo ""
 # Generate download command with MD5 verification
 UPLOAD_DATE=$(date +"%d/%m/%y")
 echo "📥 Download Command:"
-DOWNLOAD_CMD=$(printf "ant file download --retries 20 $FILE_ADDRESS $FILENAME  # ${UPLOAD_DURATION} md5sum $MD5_ORIGINAL  $FILE_SIZE \$%.2f $UPLOAD_DATE" "$TOTAL_COST_USD")
+DOWNLOAD_CMD=$(printf "ant file download %s -o %s  # %s md5sum %s  %s \$%.2f %s" "$FILE_ADDRESS" "$FILENAME" "${UPLOAD_DURATION}" "$MD5_ORIGINAL" "$FILE_SIZE" "$TOTAL_COST_USD" "$UPLOAD_DATE")
 echo "$DOWNLOAD_CMD"
 echo "$DOWNLOAD_CMD" >> uploads.txt
 echo ""
