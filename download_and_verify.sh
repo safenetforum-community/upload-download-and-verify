@@ -14,8 +14,9 @@ declare -a downloads
 add_download() {
     local cmd="$1"
     
-    # Extract hash (64 character hex string after "ant file download --retries")
-    local hash=$(echo "$cmd" | grep -oP 'ant file download --retries [0-9]+ \K[a-f0-9]{64}')
+    # Extract hash (64 character hex string after "ant file download")
+    # Supports both old format (--retries N <hash>) and new format (<hash> -o)
+    local hash=$(echo "$cmd" | grep -oP 'ant file download\s+(--retries\s+[0-9]+\s+)?\K[a-f0-9]{64}')
     
     # Extract expected MD5 (32 character hex string after md5sum)
     # New format: # <duration> md5sum <md5> or old format: #md5sum <md5>
@@ -26,13 +27,19 @@ add_download() {
         return
     fi
     
-    # Extract filename - it's between the hash and the # comment
-    # First, remove the command prefix and hash
-    local after_hash=$(echo "$cmd" | sed "s/.*$hash[[:space:]]*//")
-    
-    # Remove the # and everything after it to get the filename
-    # New format: # <duration> md5sum ... or old format: #md5sum ...
-    local filename=$(echo "$after_hash" | sed 's/#.*//' | xargs)
+    # Extract filename - supports both old and new format
+    # New format: ant file download <hash> -o <filename>  # ...
+    # Old format: ant file download --retries 20 <hash> <filename>  # ...
+    local filename=""
+
+    # Try new format first: -o <filename>
+    filename=$(echo "$cmd" | grep -oP -- '-o\s+\K[^\s#]+')
+
+    # Fall back to old format: hash followed by filename before #
+    if [ -z "$filename" ]; then
+        local after_hash=$(echo "$cmd" | sed "s/.*$hash[[:space:]]*//")
+        filename=$(echo "$after_hash" | sed 's/#.*//' | xargs)
+    fi
     
     # If filename is just "." or empty, try to extract from after the MD5 in the comment
     if [ "$filename" = "." ] || [ -z "$filename" ]; then
@@ -386,7 +393,7 @@ for i in "${!downloads[@]}"; do
     echo "  Downloading..."
     start_time=$(date +%s)
     # Run ant in background to get PID, then wait for it
-    ant file download --retries 20 "$hash" "$filename" &
+    ant file download "$hash" -o "$filename" &
     current_ant_pid=$!
     wait $current_ant_pid 2>/dev/null
     ant_exit_code=$?
