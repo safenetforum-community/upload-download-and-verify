@@ -231,25 +231,8 @@ format_size() {
 print_summary() {
     local is_interrupted=$1
     local completed_count=${#result_filenames[@]}
-    # Use absolute path for log file to prevent accidentally overwriting the script
-    # Handle case when script is run from pipe/file descriptor (e.g., bash <(curl ...))
-    local script_source="${BASH_SOURCE[0]}"
-    if [[ "$script_source" =~ ^/dev/fd/ ]] || [ ! -e "$script_source" ]; then
-        # Script is running from pipe or file descriptor, use current directory
-        local script_dir="$(pwd)"
-    else
-        # Normal execution, use script's directory
-        local script_dir="$(cd "$(dirname "$script_source")" && pwd)"
-    fi
-    local log_file="${script_dir}/log_download_and_verify.txt"
-    
-    # Safety check: ensure we're not writing to the script itself
-    if [[ ! "$script_source" =~ ^/dev/fd/ ]] && [ -e "$script_source" ]; then
-        local script_path="${script_dir}/$(basename "$script_source")"
-        if [ "$log_file" = "$script_path" ]; then
-            log_file="${script_dir}/download_log.txt"
-        fi
-    fi
+    # Log file is written to the current working directory (where the command was run)
+    local log_file="$(pwd)/log_download_and_verify.txt"
     
     # Function to output to both terminal and file
     output_both() {
