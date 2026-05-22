@@ -7,6 +7,37 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 RESET='\033[0m'
 
+# Parallel jobs config (env var or -j flag, default 4)
+PARALLEL_JOBS="${PARALLEL_JOBS:-4}"
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -j|--jobs)
+            PARALLEL_JOBS="$2"
+            shift 2
+            ;;
+        -h|--help)
+            echo "Usage: $0 [-j N|--jobs N]"
+            echo "  -j, --jobs N    Number of parallel downloads (default: 4)"
+            echo "Env: PARALLEL_JOBS=N"
+            exit 0
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            echo "Usage: $0 [-j N|--jobs N]" >&2
+            exit 1
+            ;;
+    esac
+done
+
+if ! [[ "$PARALLEL_JOBS" =~ ^[0-9]+$ ]] || [ "$PARALLEL_JOBS" -lt 1 ]; then
+    echo "Error: PARALLEL_JOBS must be a positive integer (got: $PARALLEL_JOBS)" >&2
+    exit 1
+fi
+
+# Per-run working directory for downloads and worker results
+RESULTS_DIR=$(mktemp -d "$(pwd)/.ant-download-XXXXXX")
+trap 'rm -rf "$RESULTS_DIR"' EXIT
+
 # Array to store download information
 declare -a downloads
 
@@ -92,6 +123,15 @@ echo ""
 
 # Capture script start time
 script_start_time=$(date '+%Y-%m-%d %H:%M:%S')
+script_start_epoch=$(date +%s)
+
+# Capture ant client version
+if command -v ant >/dev/null 2>&1; then
+    ant_version=$(ant --version 2>/dev/null | head -1 | tr -d '\r')
+    [ -z "$ant_version" ] && ant_version="unknown"
+else
+    ant_version="ant CLI not found"
+fi
 
 # Arrays to store results for summary
 declare -a result_filenames
@@ -104,7 +144,6 @@ declare -a result_upload_date
 
 # Flag to track if script was interrupted
 interrupted=0
-current_ant_pid=0
 
 # Function to format time (same format as upload.sh: HHh MMm SSs with zero-padding)
 format_time() {
@@ -263,6 +302,7 @@ print_summary() {
     output_both "=========================================="
     output_both "Summary:"
     output_both "  Script started: $script_start_time"
+    output_both "  ant client:     $ant_version"
     echo ""
     
     # Print detailed summary for each file
@@ -328,7 +368,108 @@ print_summary() {
     # Format and display total size
     local total_size_formatted=$(format_size "$total_size_bytes")
     output_both "  Total amount downloaded: $total_size_formatted"
+
+    # Calculate and display total script run time
+    local script_end_epoch
+    script_end_epoch=$(date +%s)
+    local total_runtime=$((script_end_epoch - script_start_epoch))
+    output_both "  Total time: $(format_time $total_runtime)"
     echo ""
+}
+
+# Worker: downloads one file into a per-job dir, verifies MD5, writes result line
+download_worker() {
+    local idx=$1
+    local hash=$2
+    local filename=$3
+    local expected_md5=$4
+    local upload_date=$5
+    local num=$((idx + 1))
+    local work_dir="$RESULTS_DIR/work-$idx"
+    local result_file="$RESULTS_DIR/result-$idx"
+    local ant_log="$RESULTS_DIR/ant-$idx.log"
+
+    mkdir -p "$work_dir"
+
+    echo "[$num/$total] ▶ Starting: $filename"
+
+    local start_time end_time download_time ant_exit_code
+    start_time=$(date +%s)
+    ant -v file download "$hash" -o "$work_dir/$filename" >"$ant_log" 2>&1
+    ant_exit_code=$?
+    end_time=$(date +%s)
+    download_time=$((end_time - start_time))
+
+    local actual_md5 file_size verified status_msg
+    if [ $ant_exit_code -ne 0 ]; then
+        actual_md5="Failed Download"
+        file_size="Failed Download"
+        verified=0
+        status_msg="${RED}✗${RESET} Download failed (see $ant_log)"
+    elif [ ! -f "$work_dir/$filename" ]; then
+        actual_md5="N/A"
+        file_size="N/A"
+        verified=0
+        status_msg="${RED}✗${RESET} File not found after download"
+    else
+        file_size=$(stat -c%s "$work_dir/$filename" 2>/dev/null || stat -f%z "$work_dir/$filename" 2>/dev/null || echo "0")
+        actual_md5=$(md5sum "$work_dir/$filename" | cut -d' ' -f1)
+        if [ "$actual_md5" = "$expected_md5" ]; then
+            verified=1
+            status_msg="${GREEN}✓${RESET} Verified"
+        else
+            verified=0
+            status_msg="${RED}✗${RESET} MD5 mismatch (got $actual_md5)"
+        fi
+    fi
+
+    # Clean up the downloaded file
+    rm -rf "$work_dir"
+
+    # Write result (pipe-delimited)
+    printf '%s|%s|%s|%s|%s|%s|%s\n' \
+        "$filename" "$actual_md5" "$expected_md5" "$verified" \
+        "$download_time" "$file_size" "${upload_date:-N/A}" > "$result_file"
+
+    # Clean up ant log on success to keep RESULTS_DIR tidy
+    if [ "$verified" = "1" ]; then
+        rm -f "$ant_log"
+    fi
+
+    echo -e "[$num/$total] $status_msg: $filename ($(format_time $download_time))"
+}
+
+# Collect worker results into the summary arrays (in input order)
+collect_results() {
+    result_filenames=()
+    result_actual_md5=()
+    result_expected_md5=()
+    result_verified=()
+    result_download_time=()
+    result_file_size=()
+    result_upload_date=()
+    download_failed=0
+    verify_failed=0
+
+    for i in "${!downloads[@]}"; do
+        local rfile="$RESULTS_DIR/result-$i"
+        [ -f "$rfile" ] || continue
+        local rf_filename rf_actual_md5 rf_expected_md5 rf_verified rf_download_time rf_file_size rf_upload_date
+        IFS='|' read -r rf_filename rf_actual_md5 rf_expected_md5 rf_verified rf_download_time rf_file_size rf_upload_date < "$rfile"
+        result_filenames+=("$rf_filename")
+        result_actual_md5+=("$rf_actual_md5")
+        result_expected_md5+=("$rf_expected_md5")
+        result_verified+=("$rf_verified")
+        result_download_time+=("$rf_download_time")
+        result_file_size+=("$rf_file_size")
+        result_upload_date+=("$rf_upload_date")
+
+        if [ "$rf_actual_md5" = "Failed Download" ]; then
+            download_failed=$((download_failed + 1))
+        elif [ "$rf_verified" != "1" ]; then
+            verify_failed=$((verify_failed + 1))
+        fi
+    done
 }
 
 # Signal handler for Ctrl+C (SIGINT)
@@ -336,21 +477,23 @@ print_summary() {
 # Use Ctrl+C to interrupt the script gracefully.
 interrupt_handler() {
     echo ""
-    echo -e "\n${RED}Interrupt received! Stopping...${RESET}"
+    echo -e "\n${RED}Interrupt received! Stopping all downloads...${RESET}"
     interrupted=1
-    
-    # Kill the current ant process if it's running
-    if [ $current_ant_pid -gt 0 ]; then
-        echo "Stopping current download..."
-        kill $current_ant_pid 2>/dev/null
-        # Wait a moment for the process to terminate
+
+    # Kill all running background workers
+    local pids
+    pids=$(jobs -rp)
+    if [ -n "$pids" ]; then
+        echo "Stopping background downloads..."
+        kill $pids 2>/dev/null
         sleep 0.5
-        # Force kill if still running
-        kill -9 $current_ant_pid 2>/dev/null
-        wait $current_ant_pid 2>/dev/null
+        kill -9 $pids 2>/dev/null
     fi
-    
-    # Print summary and exit
+    wait 2>/dev/null
+
+    # Collect whatever results made it to disk
+    collect_results
+
     print_summary 1
     exit 130  # Exit code 130 is standard for SIGINT
 }
@@ -358,121 +501,35 @@ interrupt_handler() {
 # Set up signal trap for Ctrl+C (SIGINT)
 trap interrupt_handler SIGINT
 
-# Download, verify, and delete each file before moving to the next
+# Launch downloads with concurrency limit
 download_failed=0
 verify_failed=0
+
+echo "Running with $PARALLEL_JOBS parallel download(s)..."
+echo ""
+
 for i in "${!downloads[@]}"; do
+    if [ $interrupted -eq 1 ]; then
+        break
+    fi
+
+    # Wait until a worker slot is free
+    while [ "$(jobs -rp | wc -l)" -ge "$PARALLEL_JOBS" ]; do
+        if [ $interrupted -eq 1 ]; then
+            break 2
+        fi
+        sleep 0.2
+    done
+
     IFS='|' read -r hash filename expected_md5 upload_date <<< "${downloads[$i]}"
-    num=$((i + 1))
-    
-    echo "[$num/$total] Processing: $filename"
-    
-    # Check if interrupted
-    if [ $interrupted -eq 1 ]; then
-        break
-    fi
-    
-    # Step 1: Download the file
-    echo "  Downloading..."
-    start_time=$(date +%s)
-    # Run ant in background to get PID, then wait for it
-    ant file download "$hash" -o "$filename" &
-    current_ant_pid=$!
-    wait $current_ant_pid 2>/dev/null
-    ant_exit_code=$?
-    current_ant_pid=0
-    
-    # Check if we were interrupted during download
-    if [ $interrupted -eq 1 ]; then
-        break
-    fi
-    
-    if [ $ant_exit_code -eq 0 ]; then
-        end_time=$(date +%s)
-        download_time=$((end_time - start_time))
-        echo -e "    ${GREEN}✓${RESET} Download completed"
-    else
-        end_time=$(date +%s)
-        download_time=$((end_time - start_time))
-        echo -e "    ${RED}✗${RESET} Download failed"
-        ((download_failed++))
-        # Store failed download info
-        result_filenames+=("$filename")
-        result_actual_md5+=("Failed Download")
-        result_expected_md5+=("$expected_md5")
-        result_verified+=("0")
-        result_download_time+=("$download_time")
-        result_file_size+=("Failed Download")
-        result_upload_date+=("${upload_date:-N/A}")
-        
-        # Delete file if it exists (partial download)
-        if [ -f "$filename" ]; then
-            echo "  Deleting failed download..."
-            rm -f "$filename" 2>/dev/null
-        fi
-        echo ""
-        continue
-    fi
-    
-    # Step 2: Verify MD5 checksum
-    if [ ! -f "$filename" ]; then
-        echo -e "    ${RED}✗${RESET} File not found for verification"
-        ((verify_failed++))
-        # Store failed verification info
-        result_filenames+=("$filename")
-        result_actual_md5+=("N/A")
-        result_expected_md5+=("$expected_md5")
-        result_verified+=("0")
-        result_download_time+=("$download_time")
-        result_file_size+=("N/A")
-        result_upload_date+=("${upload_date:-N/A}")
-        echo ""
-        continue
-    fi
-    
-    # Get file size in bytes
-    file_size_bytes=$(stat -c%s "$filename" 2>/dev/null || stat -f%z "$filename" 2>/dev/null || echo "0")
-    
-    echo "  Verifying MD5 checksum..."
-    actual_md5=$(md5sum "$filename" | cut -d' ' -f1)
-    
-    if [ "$actual_md5" = "$expected_md5" ]; then
-        echo -e "    ${GREEN}✓${RESET} MD5 matches"
-        verified=1
-    else
-        echo -e "    ${RED}✗${RESET} MD5 mismatch"
-        echo "      Expected: $expected_md5"
-        echo "      Actual:   $actual_md5"
-        ((verify_failed++))
-        verified=0
-    fi
-    
-    # Store results for summary (store size in bytes for proper formatting)
-    result_filenames+=("$filename")
-    result_actual_md5+=("$actual_md5")
-    result_expected_md5+=("$expected_md5")
-    result_verified+=("$verified")
-    result_download_time+=("$download_time")
-    result_file_size+=("$file_size_bytes")
-    result_upload_date+=("${upload_date:-N/A}")
-    
-    # Step 3: Delete the file (whether verification passed or failed)
-    if [ -f "$filename" ]; then
-        echo "  Deleting file..."
-        if rm -f "$filename"; then
-            echo -e "    ${GREEN}✓${RESET} File deleted"
-        else
-            echo -e "    ${RED}✗${RESET} Failed to delete file"
-        fi
-    fi
-    
-    echo ""
-    
-    # Check if interrupted before continuing
-    if [ $interrupted -eq 1 ]; then
-        break
-    fi
+    download_worker "$i" "$hash" "$filename" "$expected_md5" "$upload_date" &
 done
+
+# Wait for all workers to finish
+wait
+
+# Collect results into summary arrays
+collect_results
 
 # Print final summary
 print_summary 0
