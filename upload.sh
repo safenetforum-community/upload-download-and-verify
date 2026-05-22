@@ -106,9 +106,30 @@ get_ant_price() {
     echo "0.50"
 }
 
+# Parse flags
+NO_MERKLE_FLAG=""
+while [[ $# -gt 0 && "$1" == -* ]]; do
+    case "$1" in
+        -x)
+            NO_MERKLE_FLAG="--no-merkle"
+            shift
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            echo "Usage: $0 [-x] <filename>" >&2
+            exit 1
+            ;;
+    esac
+done
+
 # Check if filename is provided
 if [[ $# -eq 0 ]]; then
-    echo "Usage: $0 <filename>"
+    echo "Usage: $0 [-x] <filename>"
+    echo "  -x    Add --no-merkle to upload command"
     echo "Example: $0 usefhiseufh.txt"
     exit 1
 fi
@@ -146,18 +167,13 @@ echo ""
 TEMP_OUTPUT=$(mktemp)
 
 # Run the upload command and capture output while showing it in real-time
-ant file upload --public "$FILENAME" 2>&1 | tee "$TEMP_OUTPUT"
+ant file upload --public $NO_MERKLE_FLAG "$FILENAME" 2>&1 | tee "$TEMP_OUTPUT"
 UPLOAD_EXIT_CODE=${PIPESTATUS[0]}
-
-# Read the output
-UPLOAD_OUTPUT=$(cat "$TEMP_OUTPUT")
-
-# Clean up temp file
-rm -f "$TEMP_OUTPUT"
 
 # Check if upload was successful
 if [[ $UPLOAD_EXIT_CODE -ne 0 ]]; then
     echo "❌ Upload failed with exit code $UPLOAD_EXIT_CODE"
+    rm -f "$TEMP_OUTPUT"
     exit 1
 fi
 
@@ -189,21 +205,22 @@ echo "📊 Upload Analysis:"
 echo "=================="
 
 # Extract file address from new output format: "  Address: <hex>"
-FILE_ADDRESS=$(echo "$UPLOAD_OUTPUT" | grep -oP '^\s*Address:\s*\K[a-f0-9]+')
+FILE_ADDRESS=$(grep -oP '^\s*Address:\s*\K[a-f0-9]+' "$TEMP_OUTPUT" || true)
 
 if [[ -z "$FILE_ADDRESS" ]]; then
     echo "❌ Error: Could not extract file address from upload output"
     echo "Upload output:"
-    echo "$UPLOAD_OUTPUT"
+    cat "$TEMP_OUTPUT"
+    rm -f "$TEMP_OUTPUT"
     exit 1
 fi
 
 # Extract number of chunks: "  Chunks:  27"
-CHUNKS=$(echo "$UPLOAD_OUTPUT" | grep -oP '^\s*Chunks:\s*\K[0-9]+' || echo "")
+CHUNKS=$(grep -oP '^\s*Chunks:\s*\K[0-9]+' "$TEMP_OUTPUT" || echo "")
 
 # Extract ANT cost and gas cost from: "  Cost:    0.3164 ANT (gas: 0.000020 ETH)"
-TOTAL_COST_ANT=$(echo "$UPLOAD_OUTPUT" | grep -oP '^\s*Cost:\s*\K[0-9.]+(?=\s*ANT)' || echo "0")
-GAS_COST_ETH_REPORTED=$(echo "$UPLOAD_OUTPUT" | grep -oP 'gas:\s*\K[0-9.]+(?=\s*ETH)' || echo "")
+TOTAL_COST_ANT=$(grep -oP '^\s*Cost:\s*\K[0-9.]+(?=\s*ANT)' "$TEMP_OUTPUT" || echo "0")
+GAS_COST_ETH_REPORTED=$(grep -oP 'gas:\s*\K[0-9.]+(?=\s*ETH)' "$TEMP_OUTPUT" || echo "")
 
 # Use reported gas cost if available, otherwise use balance-based calculation
 if [[ -n "$GAS_COST_ETH_REPORTED" ]]; then
@@ -213,10 +230,13 @@ else
 fi
 
 # Extract upload time from ant output: "  Time:    301.0s"
-UPLOAD_TIME_ANT=$(echo "$UPLOAD_OUTPUT" | grep -oP '^\s*Time:\s*\K[0-9.]+(?=s)' || echo "")
+UPLOAD_TIME_ANT=$(grep -oP '^\s*Time:\s*\K[0-9.]+(?=s)' "$TEMP_OUTPUT" || echo "")
 
 # Extract reported size: "  Size:    93.3 MB"
-UPLOAD_SIZE_REPORTED=$(echo "$UPLOAD_OUTPUT" | grep -oP '^\s*Size:\s*\K[0-9.]+ [A-Z]+' || echo "")
+UPLOAD_SIZE_REPORTED=$(grep -oP '^\s*Size:\s*\K[0-9.]+ [A-Z]+' "$TEMP_OUTPUT" || echo "")
+
+# Done with the captured output
+rm -f "$TEMP_OUTPUT"
 
 # Get current ETH price in USD
 echo "💰 Fetching current ETH price..."
