@@ -1,19 +1,38 @@
-ant file download --retries 20 720fb8ebfaae59d22516c6091ce99c482ebe255f5bb019430109e528f620bfc9 Patosh-RoughNight.mp3  #md5sum 452d1231d72489503ce73bc504b3da6e  6M $0.20 13/02/25
-ant file download --retries 20 b1f02ea6fe81c4d9bcdf62f4b5bee9b0852ec5e81adf0569b7bc738125975962 dial-up.mp4  # 00h 1m 1s   md5sum c87b16f41378115d9d21b3c4b6697fb5  1M $0.20 03/06/25
-ant file download --retries 20 7c96ae879c9f235df566007c15b1e7af54f7c567987fcd1600a112ffc827ba05 BegBlag.mp3  # 00h 2m 11s  md5sum b5cbbfb4fd311c0913972f885cada4e8  16M $0.20 21/01/26
-ant file download --retries 20 02aa9205b26ba819090650a230cb180bd21e628daa2327b2b4ff086402c4d25c lmde-6-cinnamon-64bit.iso  # 00h 06m 16s md5sum 34c4a18045220b0de26edb0d8e4d67ef  2.6G $0.00 26/01/26
-ant file download --retries 20 6b1f3be9db3ca278a4c0d83f1ce050a74c16ed90c6c8ca1a56ef60867f4da0ae lmde-7-cinnamon-64bit.iso  # 00h 06m 16s md5sum 0fc9f0b97622a5826d19fb8ca4a24a37  2.8G $0.00 27/01/26
-ant file download --retries 20 2bc0e24a0ffcb628d04400c9265227fc6448fb1216f8cb7db60511c28161b4fd linuxmint-21-xfce-64bit.iso  # 00h 06m 16s md5sum 7f213f0a15cc92e3c12d322df002541e  2.3G $0.00 30/01/26
-ant file download --retries 20 e568bd17960d4a3cb763203b36a874fdce674fa2827dda6bac3546508deb49c0 linuxmint-21-mate-64bit.iso  # 00h 06m 16s md5sum 1ec149e7d906d32fb849f90134bde2d6  2.4G $0.00 31/01/26
-ant file download --retries 20 cf26a65c907a075701adbe6eb7cef00e4664857768b2aea8f92e71774643e8bd linuxmint-21-cinnamon-64bit.iso  # 00h 06m 16s md5sum dcdbee2c135ccc485aa28854056ef787  2.3G $0.00 01/02/26
-ant file download --retries 20 999611ba05b1fc07f49f37cb14a14f9b148168f802aaf85fc5f242d50e86ef67 linuxmint-21.1-xfce-64bit.iso  # 00h 06m 16s md5sum b39031bd04edeb7641bb07aec73dc49d  2.5G $0.45 06/02/26
-ant file download --retries 20 c4be83653596ef66f154365689a47c3e6669434e00922b82ff0308aa91666eda linuxmint-21.1-mate-64bit.iso  # 00h 06m 16s md5sum bbc533c66edb7dcbde7525f71f7f5ec8  2.6G $0.45 06/02/26
-ant file download --retries 20 5f3f397c40bd37c8ef02ae4483abdf53ac0476f00d4600c9524e12757d192a3a linuxmint-21.1-cinnamon-64bit.iso  # 00h 22m 51s md5sum ce0a8c526a0cc8343fba08b6fff61bc8  2.5G $0.14 06/02/26
-ant file download --retries 20 02fcbb5cb691efc2eb829e054a81bd2f1d0e1de53e7b98b1aa9c976622acdfc9 linuxmint-21.2-xfce-64bit.iso  # 00h 39m 33s md5sum a5e3d42d99cbbc69d9e4bc1bf49d5eb4  2.8G $0.26 07/02/26
-ant file download --retries 20 33a9f7f67c8e02181dbd4d460d65d57119b33b9ff3cad4f6a2327110d884b3c6 linuxmint-21.2-mate-64bit.iso  # 00h 19m 00s md5sum 799a21d5eac716b63657dac08cfe436e  2.9G $0.13 07/02/26
-ant file download --retries 20 55f1e03590bf8a82505db21b9e83a7ad49c607c265f9e2ae48a55b3bd679f495 linuxmint-21.2-cinnamon-64bit-edge.iso  # 00h 35m 41s md5sum ae74a9fa207f4436c17ccb844fae1366  2.9G $0.24 07/02/26
-ant file download --retries 20 69773fd87855de0579e70a71f365e3f6831141797b674c2bbf6d48d665ebe529 linuxmint-21.2-cinnamon-64bit.iso  # 00h 20m 21s md5sum 98213481fef82b9337de96469edb5089  2.9G $0.12 07/02/26
-ant file download --retries 20 5c119c80c98a99d1d546649948fabb61c08c61b4a55405ab450d5e1e0cc79390 linuxmint-21.3-xfce-64bit.iso  # 00h 29m 51s md5sum 1d8a139b0a3de57e502d586c5da858c3  2.9G $0.00 08/02/26
-ant file download --retries 20 1a8cd5a2620a2b6714b19d1d20183b08cb4f9f840ab08dffec4d1ba0ad3508bf linuxmint-21.3-mate-64bit.iso  # 02h 55m 22s md5sum 18318dbdc5b2ddd5cd0eb248175536e0  3.0G $0.12 13/02/26
-ant file download --retries 20 3f729f0c4994f27d0946b9d794d21a13bd4b81fcc848c8df26ddac83a840ab67 linuxmint-21.3-cinnamon-64bit-edge.iso  # 07h 58m 27s md5sum 7c4312bcd8e7c40159b080554a8ecd7d  3.0G $0.37 14/02/26
-ant file download --retries 20 5ada5f49a68d68ec192863bc3bf3054d82507d93270430faf46fce91e7e0260e linuxmint-21.3-cinnamon-64bit.iso  # 01h 43m 09s md5sum bca4e67799f0fb10d1bd09f7536a4113  2.9G $0.25 14/02/26
+ant file download 2b05f1257a73cb316c3a6765a364ca58dea56c306e597b47a48717c4c81daad3 -o seed.txt					# 00h 03m 37s md5sum 3beff273e91a9fa1521a16ef9abfbf6c  4.0K $0.01 15/04/26
+ant file download 8220e3d5621a32eb3e3d3c78e0192a27fc336ac3f881bf7e9bdd99b2504a58c9 -o cock.jpeg					# 00h 10m 27s md5sum 33c29416457bde9ed9cf2eeda022b716  152K $0.01 23/04/26
+ant file download 00ac7cbe1fe3e49fcd9e490eb313fabc2fe4407e67196292e961c3b34e9b1afa -o BegBlag.mp3				# 00h 06m 52s md5sum b5cbbfb4fd311c0913972f885cada4e8  16M $0.00 15/04/26
+ant file download 999159e923ba878bf961ff81f245fe5c95a2e205ac4dcd9ed3affd7c56b31dca -o lmde-6-cinnamon-64bit.iso			# 02h 28m 55s md5sum 34c4a18045220b0de26edb0d8e4d67ef  2.6G $0.41 18/04/26
+ant file download 750afc60b840bb2496674f2a5ce12519d3cae3866fc42a2f3ae7bcf5de1ffdb3 -o lmde-7-cinnamon-64bit.iso			# 00h 26m 28s md5sum 0fc9f0b97622a5826d19fb8ca4a24a37  2.8G $0.13 09/05/26
+ant file download 18a1f9923d61dcd03266b06bead66c39fc75aea83c42be74d95a32cb42cf89e9 -o AnarchyInTheSouthside.mp3			# 00h 02m 30s md5sum 6d14a6fb2ea801521cc4afccbd20d26a  66M $0.02 09/05/26
+ant file download 6ce1f146e185576fa414a8ea85ee0b68097b70d8c8601bce684c8db6d251afa4 -o Patosh-RoughNight.mp3			# 00h 01m 48s md5sum 452d1231d72489503ce73bc504b3da6e  6.0M $0.01 09/05/26
+ant file download 71dab80bbc2ccbe810bd162c306a3f84ecd7d88e15f36380b2bc27a002749ec0 -o ant.png					# 00h 02m 33s md5sum 2f6ef0819c0b20a3561c0841b904ea1c  804K $0.01 09/05/26
+ant file download d822146927ccded6aefc637db545f4effcfee9a6353f9be7e06495aa07b69f8d -o autonomi.mp4				# 00h 01m 48s md5sum 9c7af792fa736307402e5ca2c33494c2  2.3M $0.01 09/05/26
+ant file download 98492471634a68707bc780c23c7786bfb05b686522ad814aafda6cf5f4ae43db -o AnIntroductionToTheSAFEnetwork.mp4	# 00h 01m 50s md5sum 35a9d8e9a28be554e00fb18c4d824913  13M $0.02 09/05/26
+ant file download 041de57f6b7414f9a052d4d5f01fbaec7f225d30c75917cf9d735c10be379e8a -o dial-up.mp4				# 00h 01m 54s md5sum c87b16f41378115d9d21b3c4b6697fb5  964K $0.01 09/05/26
+ant file download ac855e1e8b17cb4ba0884a4e7025bd5f51d95ed69e4fa15ca37290496a400ea0 -o NightOfTheLivingDeadRemasteredHD.mp4	# 00h 19m 56s md5sum 3acabf3c85d9a93695b75499dbc3647e  1.8G $0.80 10/05/26
+ant file download 72cc74314dc7243b21c292d4bf43bbc257fb191f7cfb19d6ae704262c9413575 -o linuxmint-21-xfce-64bit.iso		# 01h 42m 53s md5sum 7f213f0a15cc92e3c12d322df002541e  2.3G $1.61 13/05/26
+ant file download 2e5622924d3fb605cccec5704d4744b8b22c659cca2262736eed1e6827ba19b0 -o linuxmint-21-mate-64bit.iso		# 02h 21m 03s md5sum 1ec149e7d906d32fb849f90134bde2d6  2.4G $1.66 13/05/26
+ant file download caebaf34f63b7f72bb521e4f76a56d61415d0ee40c3d4d9d0947d679fd89f1a1 -o linuxmint-21-cinnamon-64bit.iso		# 00h 16m 06s md5sum dcdbee2c135ccc485aa28854056ef787  2.3G $0.24 13/05/26
+ant file download 888ef4f77aac0274ebfcce20465e84c5d9d7dfa0c6c610cc8343af3395638199 -o linuxmint-21.1-xfce-64bit.iso		# 01h 20m 02s md5sum b39031bd04edeb7641bb07aec73dc49d  2.5G $0.90 14/05/26
+ant file download 365228d7dfb6343c2f22a29b4724db447a884c239a9cfb1196fe1e73a2f82316 -o linuxmint-21.1-mate-64bit.iso		# 01h 17m 52s md5sum bbc533c66edb7dcbde7525f71f7f5ec8  2.6G $1.83 14/05/26
+ant file download 882cc37b659e87df527edaba14f26cb4cd337f1c0e23035676622d8dd3a359b1 -o linuxmint-21.1-cinnamon-64bit.iso		# 01h 22m 11s md5sum ce0a8c526a0cc8343fba08b6fff61bc8  2.5G $1.79 14/05/26
+ant file download 08ceebf66bd416b516fe4ad6f380a768698b2e989564be422948ed022eb38a2b -o linuxmint-21.2-xfce-64bit.iso		# 00h 11m 52s md5sum a5e3d42d99cbbc69d9e4bc1bf49d5eb4  2.8G $0.31 15/05/26
+ant file download 408c9abfbd5532c6d09d6f7c0aefb8b5adf12f19fd68ff5cb6be356b326d5fbd -o linuxmint-21.2-mate-64bit.iso		# 01h 35m 16s md5sum 799a21d5eac716b63657dac08cfe436e  2.9G $2.00 15/05/26
+ant file download 962211914393f60b5f163ec321e870003e29605052d63feda8ccbc1c0ec59be2 -o linuxmint-21.2-cinnamon-64bit.iso		# 00h 36m 36s md5sum 98213481fef82b9337de96469edb5089  2.9G $1.98 15/05/26
+ant file download 32183574ad187a16770c30b6594dc38ac16c764dc2dc6ccd6ee150484c758c30 -o linuxmint-21.3-xfce-64bit.iso		# 01h 07m 35s md5sum 1d8a139b0a3de57e502d586c5da858c3  2.9G $1.98 15/05/26
+ant file download dd8da69cc6be30e607fa18fbd7794f55b438e3bbf4f05092bf8f45d5349c2af1 -o linuxmint-21.3-mate-64bit.iso		# 01h 07m 51s md5sum 18318dbdc5b2ddd5cd0eb248175536e0  3.0G $2.20 15/05/26
+ant file download e241694a21af050dcc11a78df194ea2e211714f561821b57e22e6243333efc62 -o linuxmint-21.3-cinnamon-64bit.iso		# 02h 25m 18s md5sum bca4e67799f0fb10d1bd09f7536a4113  2.9G $1.97 15/05/26
+ant file download 915bd5a4f953b021c6ec747b7c600b8c5161222406f41943c456e7eaf37d7655 -o linuxmint-22-xfce-64bit.iso		# 01h 08m 07s md5sum ebd1e6ab0904336af984d2b5649e01a7  2.7G $1.82 17/05/26
+ant file download 465b960647844d12f5ad6d925d48464b9ebbf663b66401b66926e234403994c0 -o linuxmint-22-mate-64bit.iso		# 01h 44m 44s md5sum 360d14fa2d4c4fb73b64d6a9eea60316  2.8G $1.89 17/05/26
+ant file download 2f67575a6697dc9ca9b84b32c3a2ec5e54b50ed53f69de98c2ae37d887f98dc5 -o linuxmint-22-cinnamon-64bit.iso		# 01h 44m 38s md5sum fb2701694cccc6035d4965ac1d55d7e0  2.8G $1.89 17/05/26
+ant file download 5efa5bea7abb2818028c54ad2685931702514d28dde0baf4be909fd57c3613c0 -o linuxmint-22.1-xfce-64bit.iso		# 02h 09m 13s md5sum 7ed0eb51afeb3009aa042bbbfc902474  2.7G $1.84 17/05/26
+ant file download ce93809ba3c2b4b2a545f7687d375fb9002445521aef8bfcd4977d1f732cbe65 -o linuxmint-22.1-mate-64bit.iso		# 02h 19m 53s md5sum 60431e6b1c2c1000534b57ab095fb05f  2.8G $1.90 17/05/26
+ant file download f2440712e0f564ae4fa3d0e1fc510a87433078c05808499f8794a9a31cf9971d -o linuxmint-22.1-cinnamon-64bit.iso		# 01h 41m 44s md5sum befea08badd48a2478affe20c5a49d51  2.8G $1.90 17/05/26
+ant file download b41f27020aac9a27d4ccdaab159a6c5797a5df85454ce5558cf1801c963ee385 -o linuxmint-22.2-xfce-64bit.iso		# 00h 43m 17s md5sum 689c7205ac5d27dd13bac528090c9a2b  2.9G $1.93 17/05/26
+ant file download c5964d28329af5948f11f18d00fd94b305fad45a42c7562c93cb65742110608b -o linuxmint-22.2-mate-64bit.iso		# 00h 46m 10s md5sum 430710e31506db00efec697d90baf3dd  3.0G $0.97 17/05/26
+ant file download e02da0bfb94922bcd354ca656cfd2cbdb54201cc85b65ebbc37439ee83f5c580 -o linuxmint-22.2-cinnamon-64bit.iso		# 00h 34m 19s md5sum 725e0a5bf98d2b5c9c0f13d8c38cae79  2.9G $1.85 17/05/26
+ant file download ebbe6f31e5088505dafe4b8817b6fbe01dd298dfe58cfe23f91dae21bb34f727 -o linuxmint-22.3-xfce-64bit.iso		# 03h 04m 46s md5sum 6b49099fe4d5b93b4a5af17164af3007  2.9G $1.88 18/05/26
+ant file download 03e3d632f41f19eb267a5a46678d2b4a4058503f24900843983a7bf5b634b3d4 -o linuxmint-22.3-mate-64bit.iso		# 00h 54m 36s md5sum c96e93efc583116443ba81279f1202b4  3.0G $1.17 18/05/26
+ant file download f4c93e61b5460d45d1c1044137391d760235f0d1e45885b5b5f92a80371f576b -o linuxmint-22.3-cinnamon-64bit.iso		# 02h 30m 42s md5sum 093f418e6765d2cb34039699ef22fbff  2.9G $1.91 18/05/26
+ant file download b572abc900437947983e70e6b775194db4f6dfe7c2f7d0adbdd0c14cf1cd81c9 -o ubuntu-26.04-desktop-arm64.iso		# 00h 14m 33s md5sum d2d7def80dfc724be502086981e0867c  3.9G $37.52 21/05/26
+ant file download ad92b94958222e483f46c4371c96046b4cc1279bf85acc6241631e543ee89b73 -o ubuntu-26.04-desktop-amd64.iso		# 00h 59m 12s md5sum 1e243a51b121062623ddccaeb8927257  6.1G $0.90 22/05/26
