@@ -23,30 +23,67 @@ if [[ ! "$WALLET_ADDRESS" =~ ^0x[0-9a-fA-F]{40}$ ]]; then
     exit 1
 fi
 
+# Convert a hex balance string (no 0x prefix) into a decimal token amount with
+# 18 decimal places. Splits into two 48-bit halves so each printf "%d" stays
+# inside signed-64-bit range (printf overflows above ~9.2e18 = ~9.2 ETH).
+# Per Janey: handles balances up to 2^96 (24 hex digits) which covers any
+# plausible ETH or ANT balance.
+hex_to_token_amount() {
+    local balance_hex="$1"
+    local bal_out="0"
+    [[ -z "$balance_hex" ]] && { echo "$bal_out"; return; }
+
+    local balance_hex_len="${#balance_hex}"
+    local balance_96="$balance_hex"
+    if (( balance_hex_len > 24 )); then balance_96="${balance_hex: -24}"; fi
+    local b96_len="${#balance_96}"
+
+    local balance_high="0"
+    local balance_low="$balance_96"
+    if (( b96_len > 12 )); then
+        balance_high="${balance_96:0: $(( b96_len - 12 ))}"
+        balance_low="${balance_96: -12}"
+    fi
+
+    local bal_high_dec bal_low_dec high_shifted
+    bal_high_dec=$(printf "%d" "0x$balance_high" 2>/dev/null) || bal_high_dec=0
+    bal_low_dec=$(printf "%d" "0x$balance_low" 2>/dev/null) || bal_low_dec=0
+    # high half is shifted left 48 bits => multiply by 2^48 = 281474976710656
+    high_shifted=$(echo "$bal_high_dec * 281474976710656" | bc -l 2>/dev/null || echo "0")
+    bal_out=$(echo "scale=18; ( $high_shifted + $bal_low_dec ) / 1000000000000000000" | bc -l 2>/dev/null || echo "0")
+
+    [[ "${bal_out:0:1}" == "." ]] && bal_out="0$bal_out"
+    echo "$bal_out"
+}
+
 # Function to get ETH balance from Arbitrum One
 get_eth_balance() {
     local wallet_address="$1"
-    # Use curl to query Arbitrum One RPC endpoint
     local response=$(curl -s -X POST \
         -H "Content-Type: application/json" \
         -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_getBalance\",\"params\":[\"$wallet_address\",\"latest\"],\"id\":1}" \
         "https://arb1.arbitrum.io/rpc" 2>/dev/null)
-    
+
     if [[ $? -eq 0 && -n "$response" ]]; then
-        # Extract balance from JSON response and convert from hex to decimal
         local balance_hex=$(echo "$response" | grep -o '"result":"[^"]*"' | sed 's/"result":"0x//' | sed 's/"//')
-        if [[ -n "$balance_hex" ]]; then
-            # Convert hex to decimal (Wei)
-            local balance_wei=$(printf "%d" "0x$balance_hex" 2>/dev/null)
-            if [[ $? -eq 0 ]]; then
-                # Convert Wei to ETH (1 ETH = 10^18 Wei)
-                echo "scale=18; $balance_wei / 1000000000000000000" | bc -l 2>/dev/null || echo "0"
-            else
-                echo "0"
-            fi
-        else
-            echo "0"
-        fi
+        hex_to_token_amount "$balance_hex"
+    else
+        echo "0"
+    fi
+}
+
+# Function to get ANT token balance from Arbitrum One (ERC-20 balanceOf)
+get_ant_balance() {
+    local wallet_address="${1:2}"  # strip leading 0x
+    local token_contract="0xa78d8321B20c4Ef90eCd72f2588AA985A4BDb684"
+    local response=$(curl -s -X POST \
+        -H "Content-Type: application/json" \
+        -d "{\"jsonrpc\":\"2.0\",\"method\":\"eth_call\",\"params\":[{\"to\":\"$token_contract\",\"data\":\"0x70a08231000000000000000000000000$wallet_address\"},\"latest\"],\"id\":1}" \
+        "https://arb1.arbitrum.io/rpc" 2>/dev/null)
+
+    if [[ $? -eq 0 && -n "$response" ]]; then
+        local balance_hex=$(echo "$response" | grep -o '"result":"[^"]*"' | sed 's/"result":"0x//' | sed 's/"//')
+        hex_to_token_amount "$balance_hex"
     else
         echo "0"
     fi
@@ -154,10 +191,14 @@ echo ""
 # Record start time
 START_TIME=$(date +%s.%N)
 
-# Get ETH balance before upload
+# Get ETH + ANT balances before upload
 echo "💰 Checking ETH balance before upload..."
 ETH_BALANCE_BEFORE=$(get_eth_balance "$WALLET_ADDRESS")
 echo "  ETH Balance Before: $ETH_BALANCE_BEFORE ETH"
+
+echo "💰 Checking ANT balance before upload..."
+ANT_BALANCE_BEFORE=$(get_ant_balance "$WALLET_ADDRESS")
+echo "  ANT Balance Before: $ANT_BALANCE_BEFORE ANT"
 
 # Upload the file and capture output
 echo "🚀 Starting upload..."
@@ -179,14 +220,24 @@ fi
 
 echo ""
 
-# Get ETH balance after upload
+# Get ETH + ANT balances after upload
 echo "💰 Checking ETH balance after upload..."
 ETH_BALANCE_AFTER=$(get_eth_balance "$WALLET_ADDRESS")
 echo "  ETH Balance After: $ETH_BALANCE_AFTER ETH"
 
-# Calculate ETH gas cost from balance difference
+echo "💰 Checking ANT balance after upload..."
+ANT_BALANCE_AFTER=$(get_ant_balance "$WALLET_ADDRESS")
+echo "  ANT Balance After: $ANT_BALANCE_AFTER ANT"
+
+# Calculate actual on-chain costs from balance differences
 ETH_GAS_COST=$(echo "scale=18; $ETH_BALANCE_BEFORE - $ETH_BALANCE_AFTER" | bc -l 2>/dev/null || echo "0")
+ANT_COST_ONCHAIN=$(echo "scale=18; $ANT_BALANCE_BEFORE - $ANT_BALANCE_AFTER" | bc -l 2>/dev/null || echo "0")
+[[ "${ETH_GAS_COST:0:1}" == "." ]] && ETH_GAS_COST="0$ETH_GAS_COST"
+[[ "${ETH_GAS_COST:0:1}" == "-" && "${ETH_GAS_COST:1:1}" == "." ]] && ETH_GAS_COST="-0${ETH_GAS_COST:1}"
+[[ "${ANT_COST_ONCHAIN:0:1}" == "." ]] && ANT_COST_ONCHAIN="0$ANT_COST_ONCHAIN"
+[[ "${ANT_COST_ONCHAIN:0:1}" == "-" && "${ANT_COST_ONCHAIN:1:1}" == "." ]] && ANT_COST_ONCHAIN="-0${ANT_COST_ONCHAIN:1}"
 echo "  ETH Gas Cost: $ETH_GAS_COST ETH"
+echo "  ANT Cost (on-chain): $ANT_COST_ONCHAIN ANT"
 
 # Record end time
 END_TIME=$(date +%s.%N)
@@ -219,8 +270,17 @@ fi
 CHUNKS=$(grep -oP '^\s*Chunks:\s*\K[0-9]+' "$TEMP_OUTPUT" || echo "")
 
 # Extract ANT cost and gas cost from: "  Cost:    0.3164 ANT (gas: 0.000020 ETH)"
-TOTAL_COST_ANT=$(grep -oP '^\s*Cost:\s*\K[0-9.]+(?=\s*ANT)' "$TEMP_OUTPUT" || echo "0")
+TOTAL_COST_ANT_REPORTED=$(grep -oP '^\s*Cost:\s*\K[0-9.]+(?=\s*ANT)' "$TEMP_OUTPUT" || echo "0")
 GAS_COST_ETH_REPORTED=$(grep -oP 'gas:\s*\K[0-9.]+(?=\s*ETH)' "$TEMP_OUTPUT" || echo "")
+
+# Prefer on-chain ANT cost (balance diff) over ant CLI's reported value — the
+# CLI has been observed reporting wrong amounts (e.g. 4 ANT when actual was 0.6).
+# Fall back to reported value only if on-chain diff is non-positive (network blip).
+if [[ -n "$ANT_COST_ONCHAIN" ]] && [[ "$(echo "$ANT_COST_ONCHAIN > 0" | bc -l 2>/dev/null)" == "1" ]]; then
+    TOTAL_COST_ANT="$ANT_COST_ONCHAIN"
+else
+    TOTAL_COST_ANT="$TOTAL_COST_ANT_REPORTED"
+fi
 
 # Use reported gas cost if available, otherwise use balance-based calculation
 if [[ -n "$GAS_COST_ETH_REPORTED" ]]; then
@@ -264,7 +324,7 @@ echo "  Chunks: $CHUNKS"
 echo "  MD5: $MD5_ORIGINAL"
 echo ""
 echo "💰 Cost Analysis:"
-echo "  ANT Cost: $TOTAL_COST_ANT ANT (\$$ANT_COST_USD)"
+echo "  ANT Cost: $TOTAL_COST_ANT ANT (\$$ANT_COST_USD)  [on-chain; ant CLI reported: $TOTAL_COST_ANT_REPORTED ANT]"
 echo "  Gas Cost: $GAS_COST_ETH ETH (\$$GAS_COST_USD)"
 echo "  Total USD Cost: \$$TOTAL_COST_USD"
 echo ""
