@@ -7,8 +7,8 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 RESET='\033[0m'
 
-# Parallel jobs config (env var or -j flag, default 4)
-PARALLEL_JOBS="${PARALLEL_JOBS:-4}"
+# Parallel jobs config (env var or -j flag, default 2)
+PARALLEL_JOBS="${PARALLEL_JOBS:-2}"
 while [ $# -gt 0 ]; do
     case "$1" in
         -j|--jobs)
@@ -17,7 +17,7 @@ while [ $# -gt 0 ]; do
             ;;
         -h|--help)
             echo "Usage: $0 [-j N|--jobs N]"
-            echo "  -j, --jobs N    Number of parallel downloads (default: 4)"
+            echo "  -j, --jobs N    Number of parallel downloads (default: 2)"
             echo "Env: PARALLEL_JOBS=N"
             exit 0
             ;;
