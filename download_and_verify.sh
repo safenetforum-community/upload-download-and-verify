@@ -7,8 +7,8 @@ GREEN='\033[0;32m'
 RED='\033[0;31m'
 RESET='\033[0m'
 
-# Parallel jobs config (env var or -j flag, default 2)
-PARALLEL_JOBS="${PARALLEL_JOBS:-2}"
+# Parallel jobs config (env var or -j flag, default 4)
+PARALLEL_JOBS="${PARALLEL_JOBS:-1}"
 while [ $# -gt 0 ]; do
     case "$1" in
         -j|--jobs)
@@ -17,7 +17,7 @@ while [ $# -gt 0 ]; do
             ;;
         -h|--help)
             echo "Usage: $0 [-j N|--jobs N]"
-            echo "  -j, --jobs N    Number of parallel downloads (default: 2)"
+            echo "  -j, --jobs N    Number of parallel downloads (default: 4)"
             echo "Env: PARALLEL_JOBS=N"
             exit 0
             ;;
@@ -37,6 +37,10 @@ fi
 # Per-run working directory for downloads and worker results
 RESULTS_DIR=$(mktemp -d "$(pwd)/.ant-download-XXXXXX")
 trap 'rm -rf "$RESULTS_DIR"' EXIT
+
+# Persistent per-run directory for per-download ant logs (kept after exit)
+LOG_DIR="$(pwd)/download-logs-$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$LOG_DIR"
 
 # Array to store download information
 declare -a downloads
@@ -303,7 +307,9 @@ print_summary() {
     output_both "Summary:"
     output_both "  Script started: $script_start_time"
     output_both "  ant client:     $ant_version"
-    echo ""
+    output_both "  Parallel downloads: $PARALLEL_JOBS"
+    output_both "  Log directory:  $LOG_DIR"
+    output_both ""
     
     # Print detailed summary for each file
     # Header row - right-align Size, Time, and Age to match data
@@ -375,6 +381,12 @@ print_summary() {
     local total_runtime=$((script_end_epoch - script_start_epoch))
     output_both "  Total time: $(format_time $total_runtime)"
     echo ""
+
+    # Mirror the log file into the per-run log directory so a complete
+    # summary travels with the per-download logs.
+    if [ -f "$log_file" ] && [ -d "$LOG_DIR" ]; then
+        cp "$log_file" "$LOG_DIR/000-Download-Test-Summary.txt"
+    fi
 }
 
 # Worker: downloads one file into a per-job dir, verifies MD5, writes result line
@@ -387,7 +399,9 @@ download_worker() {
     local num=$((idx + 1))
     local work_dir="$RESULTS_DIR/work-$idx"
     local result_file="$RESULTS_DIR/result-$idx"
-    local ant_log="$RESULTS_DIR/ant-$idx.log"
+    local safe_filename="${filename//\//_}"
+    local ant_log
+    ant_log=$(printf '%s/%03d-%s.log' "$LOG_DIR" "$num" "$safe_filename")
 
     mkdir -p "$work_dir"
 
@@ -430,11 +444,6 @@ download_worker() {
     printf '%s|%s|%s|%s|%s|%s|%s\n' \
         "$filename" "$actual_md5" "$expected_md5" "$verified" \
         "$download_time" "$file_size" "${upload_date:-N/A}" > "$result_file"
-
-    # Clean up ant log on success to keep RESULTS_DIR tidy
-    if [ "$verified" = "1" ]; then
-        rm -f "$ant_log"
-    fi
 
     echo -e "[$num/$total] $status_msg: $filename ($(format_time $download_time))"
 }
