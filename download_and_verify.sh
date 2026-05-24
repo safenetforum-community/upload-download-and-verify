@@ -276,28 +276,32 @@ print_summary() {
     local completed_count=${#result_filenames[@]}
     # Log file is written to the current working directory (where the command was run)
     local log_file="$(pwd)/log_download_and_verify.txt"
-    
-    # Function to output to both terminal and file
+    # Per-run summary file lives in the log dir and contains ONLY this run.
+    local summary_file="$LOG_DIR/000-Download-Test-Summary.txt"
+    : > "$summary_file"
+
+    # Function to output to both terminal and both log files
     output_both() {
-        echo "$1" | tee -a "$log_file"
+        echo "$1" | tee -a "$log_file" "$summary_file"
     }
-    
-    # Function to output printf to both terminal and file
+
+    # Function to output printf to both terminal and both log files
     printf_both() {
-        printf "$@" | tee -a "$log_file"
+        printf "$@" | tee -a "$log_file" "$summary_file"
     }
-    
-    # Add blank lines to log file for readability
+
+    # Add blank lines to log file for readability (cumulative log only;
+    # the per-run summary file starts fresh, so no separators needed).
     echo "" >> "$log_file"
     echo "" >> "$log_file"
-    
+
     if [ $is_interrupted -eq 1 ]; then
         echo ""
-        echo -e "${RED}⚠ Script interrupted by user (Ctrl+C)${RESET}" | tee -a "$log_file"
+        echo -e "${RED}⚠ Script interrupted by user (Ctrl+C)${RESET}" | tee -a "$log_file" "$summary_file"
         output_both "Printing results for $completed_count completed file(s)..."
         echo ""
     fi
-    
+
     if [ $completed_count -eq 0 ]; then
         output_both "No files have been processed yet."
         return
@@ -350,8 +354,8 @@ print_summary() {
         printf "%5s" ""
         printf "%12s %12s %10s\n" "$size_formatted" "$time_formatted" "$age_formatted"
         
-        # Print to file without color codes (time and age are right-aligned to match header)
-        printf "%-50s %-32s %-32s %-6s %12s %12s %10s\n" "$filename" "$actual_md5" "$expected_md5" "$status_plain" "$size_formatted" "$time_formatted" "$age_formatted" >> "$log_file"
+        # Print to both log files without color codes (time and age are right-aligned to match header)
+        printf "%-50s %-32s %-32s %-6s %12s %12s %10s\n" "$filename" "$actual_md5" "$expected_md5" "$status_plain" "$size_formatted" "$time_formatted" "$age_formatted" | tee -a "$log_file" "$summary_file" > /dev/null
     done
     
     echo ""
@@ -381,12 +385,6 @@ print_summary() {
     local total_runtime=$((script_end_epoch - script_start_epoch))
     output_both "  Total time: $(format_time $total_runtime)"
     echo ""
-
-    # Mirror the log file into the per-run log directory so a complete
-    # summary travels with the per-download logs.
-    if [ -f "$log_file" ] && [ -d "$LOG_DIR" ]; then
-        cp "$log_file" "$LOG_DIR/000-Download-Test-Summary.txt"
-    fi
 }
 
 # Worker: downloads one file into a per-job dir, verifies MD5, writes result line
