@@ -106,9 +106,9 @@ add_download() {
 # Load download commands from uploads.txt file
 UPLOADS_FILE="uploads.txt"
 
-if [ ! -f "$UPLOADS_FILE" ]; then
-    echo "Error: $UPLOADS_FILE not found!"
-    echo "Please make sure uploads.txt exists in the current directory."
+if [ ! -s "$UPLOADS_FILE" ]; then
+    echo "Error: $UPLOADS_FILE does not exist or has no entries!"
+    echo "Please make sure uploads.txt exists with entries in the current directory."
     exit 1
 fi
 
@@ -385,6 +385,20 @@ print_summary() {
     local total_runtime=$((script_end_epoch - script_start_epoch))
     output_both "  Total time: $(format_time $total_runtime)"
     echo ""
+
+    # Archive the log dir (named after itself) into the log dir.
+    # Build in /tmp first so the tarball does not contain itself, then move in.
+    local log_base log_parent tmp_archive
+    log_base=$(basename "$LOG_DIR")
+    log_parent=$(dirname "$LOG_DIR")
+    tmp_archive=$(mktemp -u "/tmp/${log_base}.XXXXXX.tar.gz")
+    if tar -C "$log_parent" -czf "$tmp_archive" "$log_base" 2>/dev/null; then
+        mv "$tmp_archive" "$LOG_DIR/${log_base}.tar.gz"
+        echo "Log archive: $LOG_DIR/${log_base}.tar.gz"
+    else
+        rm -f "$tmp_archive"
+        echo "Warning: failed to create log archive"
+    fi
 }
 
 # Worker: downloads one file into a per-job dir, verifies MD5, writes result line
