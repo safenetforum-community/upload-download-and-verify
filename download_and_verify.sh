@@ -8,7 +8,7 @@ RED='\033[0;31m'
 RESET='\033[0m'
 
 # Parallel jobs config (env var or -j flag, default 4)
-PARALLEL_JOBS="${PARALLEL_JOBS:-1}"
+PARALLEL_JOBS="${PARALLEL_JOBS:-4}"
 while [ $# -gt 0 ]; do
     case "$1" in
         -j|--jobs)
@@ -412,6 +412,7 @@ download_worker() {
     local work_dir="$RESULTS_DIR/work-$idx"
     local result_file="$RESULTS_DIR/result-$idx"
     local safe_filename="${filename//\//_}"
+    local tmp_file="$work_dir/tmpfile"
     local ant_log
     ant_log=$(printf '%s/%03d-%s.log' "$LOG_DIR" "$num" "$safe_filename")
 
@@ -421,7 +422,7 @@ download_worker() {
 
     local start_time end_time download_time ant_exit_code
     start_time=$(date +%s)
-    ant -v file download "$hash" -o "$work_dir/$filename" >"$ant_log" 2>&1
+    ant -v file download "$hash" -o "$tmp_file" >"$ant_log" 2>&1
     ant_exit_code=$?
     end_time=$(date +%s)
     download_time=$((end_time - start_time))
@@ -432,14 +433,14 @@ download_worker() {
         file_size="Failed Download"
         verified=0
         status_msg="${RED}✗${RESET} Download failed (see $ant_log)"
-    elif [ ! -f "$work_dir/$filename" ]; then
+    elif [ ! -f "$tmp_file" ]; then
         actual_md5="N/A"
         file_size="N/A"
         verified=0
         status_msg="${RED}✗${RESET} File not found after download"
     else
-        file_size=$(stat -c%s "$work_dir/$filename" 2>/dev/null || stat -f%z "$work_dir/$filename" 2>/dev/null || echo "0")
-        actual_md5=$(md5sum "$work_dir/$filename" | cut -d' ' -f1)
+        file_size=$(stat -c%s "$tmp_file" 2>/dev/null || stat -f%z "$tmp_file" 2>/dev/null || echo "0")
+        actual_md5=$(md5sum "$tmp_file" | cut -d' ' -f1)
         if [ "$actual_md5" = "$expected_md5" ]; then
             verified=1
             status_msg="${GREEN}✓${RESET} Verified"
