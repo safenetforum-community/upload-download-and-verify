@@ -137,6 +137,34 @@ else
     ant_version="ant CLI not found"
 fi
 
+# Gather host info for summary (CPU, RAM, free disk, download speed)
+sys_arch=$(uname -m 2>/dev/null || echo "?")
+sys_cores=$(nproc 2>/dev/null || echo "?")
+sys_ram=$(awk '/^MemTotal:/ {printf "%.0f GB", $2/1024/1024}' /proc/meminfo 2>/dev/null)
+[ -z "$sys_ram" ] && sys_ram="N/A"
+sys_disk_free=$(df -B1 --output=avail . 2>/dev/null | tail -1 | awk '{
+    gb = $1 / 1073741824
+    if (gb >= 1024) printf "%.1f TB", gb/1024
+    else printf "%.0f GB", gb
+}')
+[ -z "$sys_disk_free" ] && sys_disk_free="N/A"
+
+# Download speed test (no install needed; uses curl + OVH 100MB test file)
+sys_dl_speed="N/A"
+if command -v curl >/dev/null 2>&1; then
+    echo "Measuring download speed..."
+    dl_bps=$(curl -s -o /dev/null -w '%{speed_download}' --max-time 15 \
+        "https://proof.ovh.net/files/100Mb.dat" 2>/dev/null)
+    if [ -n "$dl_bps" ]; then
+        sys_dl_speed=$(awk -v b="$dl_bps" 'BEGIN{
+            mbps = b * 8 / 1000000
+            if (mbps >= 1) printf "%.0f Mbps", mbps
+            else if (mbps > 0) printf "%.1f Mbps", mbps
+            else print "N/A"
+        }')
+    fi
+fi
+
 # Arrays to store results for summary
 declare -a result_filenames
 declare -a result_actual_md5
@@ -309,10 +337,11 @@ print_summary() {
     
     output_both "=========================================="
     output_both "Summary:"
-    output_both "  Script started: $script_start_time"
-    output_both "  ant client:     $ant_version"
-    output_both "  Parallel downloads: $PARALLEL_JOBS"
-    output_both "  Log directory:  $LOG_DIR"
+    printf_both "  %-16s %-26s %-14s %s\n" "Script started:" "$script_start_time" "ant client:" "$ant_version"
+    printf_both "  %-16s %-26s %-14s %s\n" "Parallel jobs:"  "$PARALLEL_JOBS"      "CPU:"        "$sys_arch ($sys_cores cores)"
+    printf_both "  %-16s %-26s %-14s %s\n" "Download speed:" "$sys_dl_speed"      "RAM:"        "$sys_ram"
+    printf_both "  %-16s %s\n"              "Free disk:"     "$sys_disk_free"
+    printf_both "  %-16s %s\n"              "Log directory:" "$LOG_DIR"
     output_both ""
     
     # Print detailed summary for each file
