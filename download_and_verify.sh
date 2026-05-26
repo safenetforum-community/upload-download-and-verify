@@ -8,7 +8,7 @@ RED='\033[0;31m'
 RESET='\033[0m'
 
 # Parallel jobs config (env var or -j flag, default 4)
-PARALLEL_JOBS="${PARALLEL_JOBS:-4}"
+PARALLEL_JOBS="${PARALLEL_JOBS:-1}"
 while [ $# -gt 0 ]; do
     case "$1" in
         -j|--jobs)
